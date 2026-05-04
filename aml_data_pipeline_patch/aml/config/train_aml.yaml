@@ -1,0 +1,101 @@
+# AML Transaction Graph Generation Training Configuration
+
+# Environment settings
+env: 'transaction'
+dataset: 'aml'
+remote_fs_mount: /opt/ml/code
+working_dir: ${remote_fs_mount}/src
+
+# Dataset paths
+dataset_path: data/patterns.jsonl
+offsets_path: data/patterns_offsets.json
+index_path: data/patterns_train.csv
+
+# Reward settings
+reward_type: 'structural_smooth'  # 'structural', 'structural_smooth', 'discriminator', 'combined'
+use_laundering_only: true
+stats_path: data/patterns_stats_train_by_type.json
+target_stats_mode: 'global'  # 'global' or 'per_type' (for later)
+
+# Smooth structural reward weights
+reward_w_n: 0.20
+reward_w_m: 0.25
+reward_w_cycles: 0.20
+reward_w_depth: 0.20
+reward_w_max_out: 0.15
+connected_bonus: 0.20
+disconnect_penalty: 0.30
+timeout_penalty: 0.25
+size_overflow_penalty: 0.03
+
+# Graph constraints
+max_nodes: 50
+min_nodes: 3
+max_action: 100
+min_action: 5
+
+# Node/edge settings
+node_feature_dim: 6  # 6D: [in_deg, out_deg, log_in, log_out, balance, is_new]
+edge_type_num: 1
+normalize_adj: false
+
+# Model architecture
+emb_size: 128
+layer_num_g: 3
+gcn_aggregate: 'mean'
+has_residual: false
+has_concat: false
+graph_emb: false
+mask_null: false
+bn: false
+stop_shift: 0  # Changed from -3 to remove stop bias
+
+# Training hyperparameters
+lr: 0.001
+num_steps: 1000000
+timesteps_per_batch: 256
+optim_epochs: 8
+optim_batchsize: 32
+gamma: 1.0
+lam: 0.95
+clip_param: 0.2
+entcoeff: 0.01
+
+# Expert imitation settings
+expert_start: 0
+expert_end: 5000
+rl_start: 100
+rl_end: 1000000
+
+# Discriminator settings
+has_d_step: false
+has_d_final: false
+has_ppo: true
+
+# Curriculum learning
+curriculum: false
+curriculum_num: 6
+curriculum_step: 50  # Changed from 500 to advance in 100k runs
+
+# Conditional generation
+is_conditional: false
+target_laundering_type: null
+laundering_sampling: 'typology_complexity_balanced'  # backward-compatible alias field
+sampling_mode: 'typology_complexity_balanced'  # unique_uniform | label_balanced | typology_balanced | typology_complexity_balanced
+complexity_bins: 3
+representable_laundering_types: []  # optional Phase-1 allow-list; leave empty to use all train laundering types
+exclude_laundering_types: []
+
+# Logging and checkpointing
+save_every: 500
+seed: 42
+name: 'aml_gcpn'
+fresh_csv: false  # Generate unique output names to avoid appending to existing CSVs
+
+# Checkpoint loading
+load: false
+load_step: 0
+name_load: ''
+
+# Device
+device: 'cuda'
